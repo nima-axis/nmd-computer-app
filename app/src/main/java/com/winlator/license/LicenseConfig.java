@@ -8,7 +8,7 @@ public final class LicenseConfig {
     public static final String BASE_URL = "https://YOUR-PROJECT.vercel.app";
 
     /** Output of `npm run keys` in the server folder (the PUBLIC key only, never the private one). */
-    public static final String PUBLIC_KEY_B64 = "PASTE_PUBLIC_KEY_B64_HERE";
+    public static final String PUBLIC_KEY_B64 = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESfhbvchaIW6Mid9EzCcDDcS9VGG4OuZsnmo000a8c5yO+zrBlbjuD7Od1UDTlK1qoYq2dh8NyFWHNTsVp4c/pQ==";
 
     /** Where users send the payment message (digits only, country code first). */
     public static final String WHATSAPP_NUMBER = "94726800969";
