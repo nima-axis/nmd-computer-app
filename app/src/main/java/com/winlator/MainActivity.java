@@ -144,6 +144,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.openFileCallback = openFileCallback;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        com.winlator.license.LicenseGate.onResume(this);
+    }
+
+    @Override
+    protected void onPause() {
+        com.winlator.license.LicenseGate.onPause();
+        super.onPause();
+    }
+
     private boolean requestAppPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) return false;
