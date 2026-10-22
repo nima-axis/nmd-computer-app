@@ -5,7 +5,7 @@ public final class LicenseConfig {
     private LicenseConfig() {}
 
     /** Your Vercel deployment of nmd-license-server (no trailing slash). */
-    public static final String BASE_URL = "https://YOUR-PROJECT.vercel.app";
+    public static final String BASE_URL = "https://admin-dashboard-alpha-ten-50.vercel.app";
 
     /** Output of `npm run keys` in the server folder (the PUBLIC key only, never the private one). */
     public static final String PUBLIC_KEY_B64 = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAESfhbvchaIW6Mid9EzCcDDcS9VGG4OuZsnmo000a8c5yO+zrBlbjuD7Od1UDTlK1qoYq2dh8NyFWHNTsVp4c/pQ==";
