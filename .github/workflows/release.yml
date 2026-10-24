@@ -1,0 +1,88 @@
+# Builds the signed APK from the (private) source repo and publishes ONLY the APK
+# to the public releases repo. The download Worker always serves the latest release.
+name: Release NMD COMPUTER
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version from app/build.gradle
+        id: ver
+        run: |
+          VN=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle)
+          VC=$(grep -oP 'versionCode\s+\K[0-9]+' app/build.gradle | head -1)
+          echo "VN=$VN" >> "$GITHUB_OUTPUT"
+          echo "VC=$VC" >> "$GITHUB_OUTPUT"
+          echo "Version $VN ($VC)"
+
+      - name: Skip if this version is already published
+        id: exists
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.ver.outputs.VN }}" -R nima-axis/nmd-computer-releases >/dev/null 2>&1; then
+            echo "SKIP=true" >> "$GITHUB_OUTPUT"; echo "Already released, skipping."
+          else
+            echo "SKIP=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.exists.outputs.SKIP == 'false'
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        if: steps.exists.outputs.SKIP == 'false'
+
+      - name: Accept SDK licenses
+        if: steps.exists.outputs.SKIP == 'false'
+        run: yes | sdkmanager --licenses > /dev/null || true
+
+      - name: Build release APK
+        if: steps.exists.outputs.SKIP == 'false'
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Sign APK
+        if: steps.exists.outputs.SKIP == 'false'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+          ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/nmd.jks"
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          "$BT/zipalign" -p -f 4 "$APK" aligned.apk
+          "$BT/apksigner" sign --ks "$RUNNER_TEMP/nmd.jks" --ks-pass env:KS_PASS --key-pass env:KEY_PASS \
+            --ks-key-alias "$ALIAS" --out "NMD-COMPUTER-v${{ steps.ver.outputs.VN }}.apk" aligned.apk
+
+      - name: Upload APK to Actions (every run, for testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: NMD-COMPUTER-test-apk
+          path: NMD-COMPUTER-v*.apk
+
+      - name: Publish APK to the public releases repo
+        if: steps.exists.outputs.SKIP == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: |
+          V="v${{ steps.ver.outputs.VN }}"
+          git log -1 --pretty=%B > notes.txt
+          gh release create "$V" "NMD-COMPUTER-v${{ steps.ver.outputs.VN }}.apk" \
+            -R nima-axis/nmd-computer-releases \
+            --title "NMD COMPUTER $V" --notes-file notes.txt --latest
