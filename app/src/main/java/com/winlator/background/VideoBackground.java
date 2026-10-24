@@ -33,6 +33,12 @@ public final class VideoBackground {
     private VideoBackground() {}
 
     private static final String ASSET_DIR = "backgrounds";
+
+    // ---- how faint the video is (so buttons and text stay easy to read) ----
+    // VIDEO_ALPHA: 0.0 = invisible, 1.0 = full brightness of the video
+    private static final float VIDEO_ALPHA = 0.45f;
+    // DIM_COLOR: black layer on top of the video. 0x80 = 50% dark, 0xB3 = 70%, 0xD9 = 85%
+    private static final int DIM_COLOR = 0xB3000000;
     private static final String PREFS = "nmd_video_bg";
     private static final String KEY_VERSION = "copied_for_version";
     private static final String[] VIDEO_EXT = {".mp4", ".webm", ".mkv", ".3gp"};
@@ -59,6 +65,7 @@ public final class VideoBackground {
             holder.setBackgroundColor(Color.BLACK);
 
             texture = new TextureView(a);
+            texture.setAlpha(VIDEO_ALPHA);
             texture.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
                 @Override public void onSurfaceTextureAvailable(SurfaceTexture st, int w, int h) {
                     surface = new Surface(st);
@@ -77,7 +84,7 @@ public final class VideoBackground {
             holder.addView(texture, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT, Gravity.CENTER));
 
             View dim = new View(a);
-            dim.setBackgroundColor(0x99000000); // darkens the video so the menus stay readable
+            dim.setBackgroundColor(DIM_COLOR); // darkens the video so the menus stay readable
             holder.addView(dim, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
