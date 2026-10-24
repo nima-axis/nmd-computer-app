@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onResume() {
         super.onResume();
         com.winlator.license.LicenseGate.onResume(this);
+        com.winlator.update.UpdateChecker.check(this);
     }
 
     @Override
