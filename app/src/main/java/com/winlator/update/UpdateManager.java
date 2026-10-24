@@ -121,10 +121,13 @@ public final class UpdateManager {
         final AlertDialog dialog = new AlertDialog.Builder(a)
                 .setTitle("Updating")
                 .setView(box)
-                .setCancelable(true)
+                .setCancelable(false)                       // outside touch does NOT close it
                 .setNegativeButton("Cancel", (d, w) -> cancelRequested = true)
-                .setOnCancelListener(d -> cancelRequested = true)
                 .create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setOnKeyListener((d, keyCode, event) -> {   // back button: ignored, use Cancel
+            return keyCode == android.view.KeyEvent.KEYCODE_BACK;
+        });
         dialog.show();
 
         new Thread(() -> {
