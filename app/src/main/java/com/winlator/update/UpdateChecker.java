@@ -18,7 +18,7 @@ public final class UpdateChecker {
     private UpdateChecker() {}
 
     // Your Worker URL (no trailing slash)
-    private static final String VERSION_URL = "https://nmd-download.nmdaxis.workers.dev/version";
+    private static final String VERSION_URL = "https://nmd-computer.nmdaxis.workers.dev/version";
 
     public static void check(final Activity activity) {
         new Thread(new Runnable() {
