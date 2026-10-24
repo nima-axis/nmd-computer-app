@@ -51,6 +51,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
         super.onCreate(savedInstanceState);
+
+        // NMD license gate: if this phone is not UNLOCKED, go to the login / premium screen first.
+        if (com.winlator.license.LicenseGate.evaluate(this) != com.winlator.license.LicenseGate.State.UNLOCKED) {
+            startActivity(new android.content.Intent(this, com.winlator.license.LicenseActivity.class));
+            finish();
+            return;
+        }
         setContentView(R.layout.main_activity);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
