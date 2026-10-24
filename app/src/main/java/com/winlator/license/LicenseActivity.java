@@ -41,6 +41,8 @@ public class LicenseActivity extends Activity {
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        com.winlator.debug.CrashLogger.install(this);
+        com.winlator.debug.CrashLogger.showPending(this);
         ScrollView sv = new ScrollView(this);
         sv.setBackgroundColor(BG);
         sv.setFillViewport(true);
