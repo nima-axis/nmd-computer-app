@@ -51,13 +51,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
         super.onCreate(savedInstanceState);
-        com.winlator.debug.CrashLogger.install(this);
         setContentView(R.layout.main_activity);
+        com.winlator.debug.CrashLogger.install(this);
+        com.winlator.background.VideoBackground.attach(this);
+
+        // NMD license gate: if this phone is not UNLOCKED, go to the login / premium screen first.
+        if (com.winlator.license.LicenseGate.evaluate(this) != com.winlator.license.LicenseGate.State.UNLOCKED) {
+            startActivity(new android.content.Intent(this, com.winlator.license.LicenseActivity.class));
+            finish();
+            return;
+        }
 
         drawerLayout = findViewById(R.id.DrawerLayout);
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
-        // Store item (id 9001). Opens the official store link set in StoreLink.java
         navigationView.getMenu().add(0, 9001, 99, com.winlator.store.StoreLink.BUTTON_TEXT);
 
         setSupportActionBar(findViewById(R.id.Toolbar));
@@ -212,6 +219,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        com.winlator.license.LicenseGate.onResume(this);
+        com.winlator.update.UpdateManager.checkOnStart(this);
+        com.winlator.background.VideoBackground.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        com.winlator.license.LicenseGate.onPause();
+        com.winlator.background.VideoBackground.onPause();
+        super.onPause();
     }
 
     public void showFragment(Fragment fragment) {
