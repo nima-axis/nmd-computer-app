@@ -47,6 +47,7 @@ public final class UpdateManager {
     private static volatile boolean cancelRequested = false;
     private static volatile boolean downloadRunning = false;
     private static volatile boolean fetchFailed = false;
+    private static volatile boolean checkDone = false;
 
     public static final class Info {
         public String version, notes;
@@ -61,13 +62,18 @@ public final class UpdateManager {
         File ready = findReadyUpdate(a);
         if (ready != null) { askInstall(a, versionOf(ready), ready); return; }
 
-        // 2) Ask the server, at most once every 10 minutes.
-        if (System.currentTimeMillis() - lastCheckAt < CHECK_EVERY_MS) return;
+        // 2) Check the server on every app start. Once it has answered, do not ask again in this app run.
+        //    If the check could not reach the server, it is tried again on the next resume.
+        if (checkDone) return;
         lastCheckAt = System.currentTimeMillis();
         new Thread(() -> {
             final Info info = fetchInfo(a);
-            if (info == null) return;
-            MAIN.post(() -> { if (!a.isFinishing()) askDownload(a, info); });
+            if (info != null) {
+                checkDone = true;
+                MAIN.post(() -> { if (!a.isFinishing()) askDownload(a, info); });
+            } else if (!fetchFailed) {
+                checkDone = true;               // answered: already up to date
+            }
         }).start();
     }
 
