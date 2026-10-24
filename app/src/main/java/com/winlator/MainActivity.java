@@ -51,18 +51,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
         super.onCreate(savedInstanceState);
-
-        // NMD license gate: if this phone is not UNLOCKED, go to the login / premium screen first.
-        if (com.winlator.license.LicenseGate.evaluate(this) != com.winlator.license.LicenseGate.State.UNLOCKED) {
-            startActivity(new android.content.Intent(this, com.winlator.license.LicenseActivity.class));
-            finish();
-            return;
-        }
         setContentView(R.layout.main_activity);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
+        // Store item (id 9001). Opens the official store link set in StoreLink.java
+        navigationView.getMenu().add(0, 9001, 99, com.winlator.store.StoreLink.BUTTON_TEXT);
 
         setSupportActionBar(findViewById(R.id.Toolbar));
         ActionBar actionBar = getSupportActionBar();
@@ -151,19 +146,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         this.openFileCallback = openFileCallback;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        com.winlator.license.LicenseGate.onResume(this);
-        com.winlator.update.UpdateManager.checkOnStart(this);
-    }
-
-    @Override
-    protected void onPause() {
-        com.winlator.license.LicenseGate.onPause();
-        super.onPause();
-    }
-
     private boolean requestAppPermissions() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) return false;
@@ -221,7 +203,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 showFragment(new SettingsFragment());
                 break;
             case R.id.menu_item_about:
-                (new AboutDialog(this)).show();
+                com.winlator.about.AboutNmdDialog.show(this);
+                break;
+            case 9001:
+                com.winlator.store.StoreLink.open(this);
+                drawerLayout.closeDrawer(GravityCompat.START);
                 break;
         }
         return true;
