@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "announcement": {
+    "id": "welcome-1",
+    "title": "NMD COMPUTER",
+    "text": "Welcome! Check the menu for new links."
+  },
+  "menu": [
+    { "label": "Get IGI 1 (official store)", "url": "https://www.gog.com/" }
+  ]
+}
