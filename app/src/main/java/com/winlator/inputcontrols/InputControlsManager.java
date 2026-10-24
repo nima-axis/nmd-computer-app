@@ -50,6 +50,43 @@ public class InputControlsManager {
         return profiles;
     }
 
+    /**
+     * Adds bundled asset profiles that are NOT on the phone yet (new profiles added in a later app version).
+     * Existing profiles are never overwritten here.
+     */
+    private void addMissingAssetProfiles() {
+        try {
+            AssetManager assetManager = context.getAssets();
+            String[] assetFiles = assetManager.list("inputcontrols/profiles");
+            if (assetFiles == null) return;
+            for (String assetFile : assetFiles) {
+                String assetPath = "inputcontrols/profiles/" + assetFile;
+                ControlsProfile originProfile;
+                try (InputStream in = assetManager.open(assetPath)) {
+                    originProfile = loadProfile(context, in);
+                }
+                if (originProfile == null) continue;
+
+                // Already on the phone (same file name for this id) -> skip
+                if (ControlsProfile.getProfileFile(context, originProfile.id).exists()) continue;
+
+                // Another profile already uses this id -> skip, so nothing gets replaced
+                boolean idTaken = false;
+                File[] files = getProfilesDir(context).listFiles();
+                if (files != null) {
+                    for (File file : files) {
+                        ControlsProfile existing = loadProfile(context, file);
+                        if (existing != null && existing.id == originProfile.id) { idTaken = true; break; }
+                    }
+                }
+                if (!idTaken) {
+                    FileUtils.copy(context, assetPath, ControlsProfile.getProfileFile(context, originProfile.id));
+                }
+            }
+        }
+        catch (IOException e) {}
+    }
+
     private void copyAssetProfilesIfNeeded() {
         File profilesDir = InputControlsManager.getProfilesDir(context);
         if (FileUtils.isEmpty(profilesDir)) {
@@ -94,6 +131,7 @@ public class InputControlsManager {
     public void loadProfiles(boolean ignoreTemplates) {
         File profilesDir = InputControlsManager.getProfilesDir(context);
         copyAssetProfilesIfNeeded();
+        addMissingAssetProfiles();
 
         ArrayList<ControlsProfile> profiles = new ArrayList<>();
         File[] files = profilesDir.listFiles();
