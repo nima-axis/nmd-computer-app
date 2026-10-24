@@ -149,8 +149,17 @@ public final class UpdateManager {
                 .show();
     }
 
+    /** Safe check: returns false (instead of crashing) if the permission is missing from the manifest. */
+    private static boolean canInstallPackages(Activity a) {
+        try {
+            return a.getPackageManager().canRequestPackageInstalls();
+        } catch (SecurityException e) {
+            return false;
+        }
+    }
+
     private static void install(Activity a, File apk) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !a.getPackageManager().canRequestPackageInstalls()) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !canInstallPackages(a)) {
             new AlertDialog.Builder(a)
                     .setTitle("Allow install")
                     .setMessage("Allow NMD COMPUTER to install apps, then open the app again to install the update.")
