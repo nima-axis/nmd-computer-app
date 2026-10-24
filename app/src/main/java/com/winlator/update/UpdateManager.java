@@ -46,6 +46,7 @@ public final class UpdateManager {
     private static volatile long lastCheckAt = 0;
     private static volatile boolean cancelRequested = false;
     private static volatile boolean downloadRunning = false;
+    private static volatile boolean fetchFailed = false;
 
     public static final class Info {
         public String version, notes;
@@ -67,6 +68,25 @@ public final class UpdateManager {
             final Info info = fetchInfo(a);
             if (info == null) return;
             MAIN.post(() -> { if (!a.isFinishing()) askDownload(a, info); });
+        }).start();
+    }
+
+    /** Manual check from the About screen. Ignores the 10-minute limit and always tells the user the result. */
+    public static void checkNow(final Activity a) {
+        if (downloadRunning) { Toast.makeText(a, "Download already running.", Toast.LENGTH_SHORT).show(); return; }
+        File ready = findReadyUpdate(a);
+        if (ready != null) { askInstall(a, versionOf(ready), ready); return; }
+        Toast.makeText(a, "Checking for updates…", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            final Info info = fetchInfo(a);
+            final boolean failed = fetchFailed;
+            lastCheckAt = System.currentTimeMillis();
+            MAIN.post(() -> {
+                if (a.isFinishing()) return;
+                if (info != null) askDownload(a, info);
+                else if (failed) Toast.makeText(a, "Could not check for updates. Check your internet.", Toast.LENGTH_LONG).show();
+                else Toast.makeText(a, "You are up to date.", Toast.LENGTH_SHORT).show();
+            });
         }).start();
     }
 
@@ -156,6 +176,7 @@ public final class UpdateManager {
 
     private static Info fetchInfo(Activity a) {
         HttpURLConnection c = null;
+        fetchFailed = true;
         try {
             c = (HttpURLConnection) new URL(VERSION_URL).openConnection();
             c.setConnectTimeout(8000);
@@ -168,6 +189,7 @@ public final class UpdateManager {
                 while ((line = br.readLine()) != null) sb.append(line);
             }
             JSONObject j = new JSONObject(sb.toString());
+            fetchFailed = false;
             Info info = new Info();
             info.version = j.getString("versionName");
             info.notes = j.optString("notes", "").trim();
