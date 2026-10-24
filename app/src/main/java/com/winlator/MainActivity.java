@@ -66,6 +66,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = findViewById(R.id.NavigationView);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().add(0, 9001, 99, com.winlator.store.StoreLink.BUTTON_TEXT);
+        for (com.winlator.config.ConfigManager.Entry e : com.winlator.config.ConfigManager.menu(this)) {
+            navigationView.getMenu().add(0, e.id, 96, e.label);
+        }
 
         setSupportActionBar(findViewById(R.id.Toolbar));
         ActionBar actionBar = getSupportActionBar();
@@ -217,6 +220,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 com.winlator.store.StoreLink.open(this);
                 drawerLayout.closeDrawer(GravityCompat.START);
                 break;
+            default:
+                if (com.winlator.config.ConfigManager.handle(this, item.getItemId())) {
+                    drawerLayout.closeDrawer(GravityCompat.START);
+                }
+                break;
         }
         return true;
     }
@@ -227,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         com.winlator.license.LicenseGate.onResume(this);
         com.winlator.update.UpdateManager.checkOnStart(this);
         com.winlator.background.VideoBackground.onResume();
+        com.winlator.config.ConfigManager.refresh(this);
     }
 
     @Override
