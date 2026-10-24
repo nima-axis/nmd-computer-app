@@ -1,6 +1,7 @@
 package com.winlator.about;
 
 import android.app.Activity;
+import com.winlator.update.UpdateManager;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -40,6 +41,7 @@ public final class AboutNmdDialog {
 
         box.addView(button(a, "Contact us on WhatsApp", v -> openWhatsApp(a)), wrap(a));
         box.addView(button(a, "Share this app", v -> shareApp(a)), wrap(a, 0, 10, 0, 0));
+        box.addView(button(a, "Check for updates", v -> UpdateManager.checkNow(a)), wrap(a, 0, 10, 0, 0));
 
         new AlertDialog.Builder(a)
                 .setView(box)
