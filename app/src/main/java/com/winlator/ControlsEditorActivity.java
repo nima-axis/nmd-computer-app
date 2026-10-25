@@ -58,6 +58,12 @@ public class ControlsEditorActivity extends AppCompatActivity implements View.On
         inputControlsView.setOverlayOpacity(0.6f);
 
         profile = InputControlsManager.loadProfile(this, ControlsProfile.getProfileFile(this, getIntent().getIntExtra("profile_id", 0)));
+        if (profile == null) {
+            // No valid profile was passed (or its file is missing): do not crash, just tell the user.
+            android.widget.Toast.makeText(this, "Select a profile first, then open the Controls Editor.", android.widget.Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
         ((TextView)findViewById(R.id.TVProfileName)).setText(profile.getName());
         inputControlsView.setProfile(profile);
 
