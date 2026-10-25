@@ -51,8 +51,9 @@ public class InputControlsManager {
     }
 
     /**
-     * Adds bundled asset profiles that are NOT on the phone yet (new profiles added in a later app version).
-     * Existing profiles are never overwritten here.
+     * Adds bundled asset profiles that the phone does not have yet (matched by NAME, not by id).
+     * - Same name already exists -> skipped (nothing is overwritten, nothing is duplicated).
+     * - Id already used by another profile -> the copy gets a new free id, so it is not skipped.
      */
     private void addMissingAssetProfiles() {
         try {
@@ -61,30 +62,55 @@ public class InputControlsManager {
             if (assetFiles == null) return;
             for (String assetFile : assetFiles) {
                 String assetPath = "inputcontrols/profiles/" + assetFile;
-                ControlsProfile originProfile;
-                try (InputStream in = assetManager.open(assetPath)) {
-                    originProfile = loadProfile(context, in);
-                }
-                if (originProfile == null) continue;
+                String json = readAssetText(assetManager, assetPath);
+                if (json == null) continue;
 
-                // Already on the phone (same file name for this id) -> skip
-                if (ControlsProfile.getProfileFile(context, originProfile.id).exists()) continue;
+                ControlsProfile origin;
+                try { origin = loadProfile(context, new java.io.ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))); }
+                catch (Exception e) { continue; }
+                if (origin == null || origin.getName() == null) continue;
 
-                // Another profile already uses this id -> skip, so nothing gets replaced
+                boolean nameExists = false;
                 boolean idTaken = false;
+                int maxId = 0;
                 File[] files = getProfilesDir(context).listFiles();
                 if (files != null) {
                     for (File file : files) {
                         ControlsProfile existing = loadProfile(context, file);
-                        if (existing != null && existing.id == originProfile.id) { idTaken = true; break; }
+                        if (existing == null) continue;
+                        maxId = Math.max(maxId, existing.id);
+                        if (origin.getName().equals(existing.getName())) nameExists = true;
+                        if (existing.id == origin.id) idTaken = true;
                     }
                 }
-                if (!idTaken) {
-                    FileUtils.copy(context, assetPath, ControlsProfile.getProfileFile(context, originProfile.id));
+                if (nameExists) continue;
+
+                int targetId = origin.id;
+                String finalJson = json;
+                if (idTaken) {
+                    targetId = Math.max(maxId, maxProfileId) + 1;
+                    JSONObject data = new JSONObject(json);
+                    data.put("id", targetId);
+                    finalJson = data.toString();
                 }
+                FileUtils.writeString(ControlsProfile.getProfileFile(context, targetId), finalJson);
             }
         }
-        catch (IOException e) {}
+        catch (Exception e) {}
+    }
+
+    private static String readAssetText(AssetManager assetManager, String path) {
+        try (InputStream in = assetManager.open(path)) {
+            InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+            StringBuilder sb = new StringBuilder();
+            char[] buf = new char[4096];
+            int n;
+            while ((n = reader.read(buf)) != -1) sb.append(buf, 0, n);
+            return sb.toString();
+        }
+        catch (IOException e) {
+            return null;
+        }
     }
 
     private void copyAssetProfilesIfNeeded() {
