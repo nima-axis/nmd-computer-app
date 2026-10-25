@@ -14,7 +14,7 @@ public final class StoreLink {
     private StoreLink() {}
 
     /** Paste the official store page URL here (GOG / Steam / publisher). */
-    public static final String STORE_URL = "https://drive.usercontent.google.com/download?id=1_xHpUDz3XKr8ShRxk5aWkP_iF31DSHcj&export=download&authuser=0";
+    public static final String STORE_URL = "https://www.mediafire.com/file/tgk4us47edo8mhq/IGI+1+(NIMESHA+EDITOR).zip/file";
 
     /** Button text shown in the menu. */
     public static final String BUTTON_TEXT = "Get IGI 1 ZIP";
